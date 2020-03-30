@@ -55,7 +55,7 @@ func (n *Node) String() string {
 
 func (n *Node) determineOS() (osType.OsType, error) {
 
-	client := n.sshClient()
+	client := n.SSHClient()
 	out, err := client.Collect("uname -a")
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (n *Node) determineOS() (osType.OsType, error) {
 	return &osType.Unknown{}, errors.New("unknown os type")
 }
 
-func (n *Node) sshClient() *sshclient.SSHConnection {
+func (n *Node) SSHClient() *sshclient.SSHConnection {
 	return &sshclient.SSHConnection{
 		Username:    n.username,
 		IP:          n.ipOrHost,
@@ -86,7 +86,7 @@ func (n *Node) sshClient() *sshclient.SSHConnection {
 	}
 }
 
-func (n *Node) sshClientWithTimeout(duration time.Duration) *sshclient.SSHConnection {
+func (n *Node) SSHClientWithTimeout(duration time.Duration) *sshclient.SSHConnection {
 	return &sshclient.SSHConnection{
 		Username:    n.username,
 		IP:          n.ipOrHost,

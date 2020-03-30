@@ -1,4 +1,4 @@
-package kubeadmclient
+package machina
 
 import (
 	"fmt"

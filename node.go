@@ -32,6 +32,18 @@ func NewNode(username string, ip string, privateKeyLocation string) *Node {
 	}
 }
 
+func (n *Node) GetUsername() string {
+	return n.username
+}
+
+func (n *Node) GetIPOrHost() string {
+	return n.ipOrHost
+}
+
+func (n *Node) GetPrivateKey() string {
+	return n.privateKeyLocation
+}
+
 func (n *Node) SetVerboseMode(mode bool) *Node {
 	n.verboseMode = mode
 	return n

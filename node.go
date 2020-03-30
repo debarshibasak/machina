@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"errors"
 
 	osType "github.com/debarshibasak/machina/ostype"
@@ -19,6 +21,20 @@ type Node struct {
 	privateKeyLocation string
 	verboseMode        bool
 	clientID           string
+}
+
+func NewNode(username string, ip string, privateKeyLocation string) *Node {
+	return &Node{
+		username:           username,
+		ipOrHost:           ip,
+		privateKeyLocation: privateKeyLocation,
+		clientID:           uuid.New().String(),
+	}
+}
+
+func (n *Node) SetVerboseMode(mode bool) *Node {
+	n.verboseMode = mode
+	return n
 }
 
 func (n *Node) String() string {

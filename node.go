@@ -53,7 +53,7 @@ func (n *Node) String() string {
 	return fmt.Sprintf("ip=%v username=%v key=%v", n.ipOrHost, n.username, n.privateKeyLocation)
 }
 
-func (n *Node) determineOS() (osType.OsType, error) {
+func (n *Node) DetermineOS() (osType.OsType, error) {
 
 	client := n.SSHClient()
 	out, err := client.Collect("uname -a")

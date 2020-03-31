@@ -2,7 +2,6 @@ package machina
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,12 +55,8 @@ func (n *Node) String() string {
 func (n *Node) DetermineOS() (osType.OsType, error) {
 
 	client := n.SSHClient()
-	out, err := client.Collect("uname -a")
-	if err != nil {
-		return nil, err
-	}
 
-	if strings.Contains(out, "Ubuntu") {
+	if err := client.Run([]string{"ls /etc/lsb-release"}); err == nil {
 		return &osType.Ubuntu{}, err
 	}
 

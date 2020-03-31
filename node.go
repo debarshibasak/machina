@@ -16,7 +16,7 @@ import (
 
 type Node struct {
 	username           string
-	ipOrHost           string
+	ip                 string
 	osType             string
 	privateKeyLocation string
 	verboseMode        bool
@@ -26,7 +26,7 @@ type Node struct {
 func NewNode(username string, ip string, privateKeyLocation string) *Node {
 	return &Node{
 		username:           username,
-		ipOrHost:           ip,
+		ip:                 ip,
 		privateKeyLocation: privateKeyLocation,
 		clientID:           uuid.New().String(),
 	}
@@ -36,8 +36,8 @@ func (n *Node) GetUsername() string {
 	return n.username
 }
 
-func (n *Node) GetIPOrHost() string {
-	return n.ipOrHost
+func (n *Node) GetIP() string {
+	return n.ip
 }
 
 func (n *Node) GetPrivateKey() string {
@@ -50,7 +50,7 @@ func (n *Node) SetVerboseMode(mode bool) *Node {
 }
 
 func (n *Node) String() string {
-	return fmt.Sprintf("ip=%v username=%v key=%v", n.ipOrHost, n.username, n.privateKeyLocation)
+	return fmt.Sprintf("ip=%v username=%v key=%v", n.ip, n.username, n.privateKeyLocation)
 }
 
 func (n *Node) DetermineOS() (osType.OsType, error) {
@@ -79,7 +79,7 @@ func (n *Node) DetermineOS() (osType.OsType, error) {
 func (n *Node) SSHClient() *sshclient.SSHConnection {
 	return &sshclient.SSHConnection{
 		Username:    n.username,
-		IP:          n.ipOrHost,
+		IP:          n.ip,
 		KeyLocation: n.privateKeyLocation,
 		VerboseMode: n.verboseMode,
 		ClientID:    n.clientID,
@@ -89,7 +89,7 @@ func (n *Node) SSHClient() *sshclient.SSHConnection {
 func (n *Node) SSHClientWithTimeout(duration time.Duration) *sshclient.SSHConnection {
 	return &sshclient.SSHConnection{
 		Username:    n.username,
-		IP:          n.ipOrHost,
+		IP:          n.ip,
 		KeyLocation: n.privateKeyLocation,
 		VerboseMode: n.verboseMode,
 		Timeout:     duration,

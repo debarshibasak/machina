@@ -113,7 +113,7 @@ func (sh *SSHConnection) ScpFrom(source string, destination string) error {
 func (sh *SSHConnection) ScpTo(source string, destination string) error {
 
 	c := "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i " + sh.KeyLocation + " " + source + " " + sh.Username + "@" + sh.IP + ":" + destination
-	fmt.Println(c)
+	fmt.Println("[node: " + sh.IP + "] " + c)
 	cmd := exec.Command("sh", "-c", c)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -125,6 +125,85 @@ func (sh *SSHConnection) ScpTo(source string, destination string) error {
 	}
 
 	return err
+}
+
+//TODO
+func (sh *SSHConnection) RunParallel(cmd []string) error {
+
+	var signer ssh.Signer
+	var config *ssh.ClientConfig
+
+	timeout := sh.Timeout
+
+	if timeout == 0 {
+		timeout = 5 * time.Minute
+	}
+
+	if sh.KeyLocation != "" {
+		d, err := ioutil.ReadFile(sh.KeyLocation)
+		if err != nil {
+			return err
+		}
+
+		signer, err = ssh.ParsePrivateKey(d)
+		if err != nil {
+			return err
+		}
+
+		config = &ssh.ClientConfig{
+			User:    sh.Username,
+			Timeout: timeout,
+			Auth:    []ssh.AuthMethod{ssh.PublicKeys(signer)},
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				return nil
+			},
+		}
+	} else {
+		config = &ssh.ClientConfig{
+			User:    sh.Username,
+			Timeout: timeout,
+			Auth:    []ssh.AuthMethod{ssh.PublicKeys()},
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				return nil
+			},
+		}
+	}
+
+	client, err := ssh.Dial("tcp", sh.IP+":22", config)
+	if err != nil {
+		return err
+	}
+
+	defer client.Close()
+
+	for _, ln := range cmd {
+
+		session, err := client.NewSession()
+		if err != nil {
+			session.Close()
+			return err
+		}
+
+		fmt.Println("[node: " + sh.IP + "] " + ln)
+
+		writeCloudInfoOut, err := session.Output(fmt.Sprintf("sh -c '%v'", ln))
+		if err != nil {
+			session.Close()
+
+			if sh.VerboseMode {
+				log.Println(string(writeCloudInfoOut))
+			}
+			return err
+		}
+
+		if sh.VerboseMode {
+			fmt.Println("[node: " + sh.IP + "] " + string(writeCloudInfoOut))
+		}
+
+		session.Close()
+	}
+
+	return nil
 }
 
 func (sh *SSHConnection) Run(cmd []string) error {

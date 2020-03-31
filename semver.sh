@@ -15,6 +15,7 @@ done
 
 shift $(($OPTIND - 1))
 
+git pull --tags
 version=`git tag | sort -V | tail -1`
 echo "version found - $version"
 

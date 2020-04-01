@@ -52,15 +52,15 @@ func (n *Node) DetermineOS() (osType.OsType, error) {
 
 	client := n.SSHClient()
 
-	if err := client.Run([]string{"ls /etc/lsb-release"}); err == nil {
+	if err := client.Run("ls /etc/lsb-release"); err == nil {
 		return &osType.Ubuntu{}, err
 	}
 
-	if err := client.Run([]string{"ls /etc/centos-release"}); err == nil {
+	if err := client.Run("ls /etc/centos-release"); err == nil {
 		return &osType.Centos{}, err
 	}
 
-	if err := client.Run([]string{"ls /etc/redhat-release"}); err == nil {
+	if err := client.Run("ls /etc/redhat-release"); err == nil {
 		return &osType.Centos{}, err
 	}
 

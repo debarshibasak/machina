@@ -9,6 +9,10 @@ import (
 	"os/exec"
 	"time"
 
+	"golang.org/x/net/context"
+
+	"golang.org/x/sync/errgroup"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
@@ -19,7 +23,6 @@ type SSHConnection struct {
 	IP          string
 	KeyLocation string
 	VerboseMode bool
-	ClientID    string
 }
 
 func (sh *SSHConnection) Collect(cmd string) (string, error) {
@@ -127,7 +130,6 @@ func (sh *SSHConnection) ScpTo(source string, destination string) error {
 	return err
 }
 
-//TODO
 func (sh *SSHConnection) RunParallel(cmd []string) error {
 
 	var signer ssh.Signer
@@ -174,39 +176,74 @@ func (sh *SSHConnection) RunParallel(cmd []string) error {
 		return err
 	}
 
-	defer client.Close()
+	defer func() {
+		err := client.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), sh.Timeout)
+	defer cancel()
+
+	g, _ := errgroup.WithContext(ctx)
 
 	for _, ln := range cmd {
 
-		session, err := client.NewSession()
-		if err != nil {
-			session.Close()
-			return err
-		}
+		ln := ln
+		client := client
 
-		fmt.Println("[node: " + sh.IP + "] " + ln)
+		g.Go(func() error {
 
-		writeCloudInfoOut, err := session.Output(fmt.Sprintf("sh -c '%v'", ln))
-		if err != nil {
-			session.Close()
+			session, err := client.NewSession()
+			if err != nil {
+				defer func() {
+					err := session.Close()
+					if err != nil {
+						log.Println(err)
+					}
+				}()
+
+				return err
+			}
+
+			fmt.Println("[node: " + sh.IP + "] " + ln)
+
+			writeCloudInfoOut, err := session.Output(fmt.Sprintf("sh -c '%v'", ln))
+			if err != nil {
+
+				defer func() {
+					err := session.Close()
+					if err != nil {
+						log.Println(err)
+					}
+				}()
+
+				if sh.VerboseMode {
+					log.Println(string(writeCloudInfoOut))
+				}
+				return err
+			}
 
 			if sh.VerboseMode {
-				log.Println(string(writeCloudInfoOut))
+				fmt.Println("[node: " + sh.IP + "] " + string(writeCloudInfoOut))
 			}
-			return err
-		}
 
-		if sh.VerboseMode {
-			fmt.Println("[node: " + sh.IP + "] " + string(writeCloudInfoOut))
-		}
+			defer func() {
+				err := session.Close()
+				if err != nil {
+					log.Println(err)
+				}
+			}()
 
-		session.Close()
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
-func (sh *SSHConnection) Run(cmd []string) error {
+func (sh *SSHConnection) Run(cmd ...string) error {
 
 	var signer ssh.Signer
 	var config *ssh.ClientConfig

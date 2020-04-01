@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-
 	"errors"
 
 	osType "github.com/debarshibasak/machina/ostype"
@@ -19,7 +17,6 @@ type Node struct {
 	osType             string
 	privateKeyLocation string
 	verboseMode        bool
-	clientID           string
 }
 
 func NewNode(username string, ip string, privateKeyLocation string) *Node {
@@ -27,7 +24,6 @@ func NewNode(username string, ip string, privateKeyLocation string) *Node {
 		username:           username,
 		ip:                 ip,
 		privateKeyLocation: privateKeyLocation,
-		clientID:           uuid.New().String(),
 	}
 }
 
@@ -77,7 +73,6 @@ func (n *Node) SSHClient() *sshclient.SSHConnection {
 		IP:          n.ip,
 		KeyLocation: n.privateKeyLocation,
 		VerboseMode: n.verboseMode,
-		ClientID:    n.clientID,
 	}
 }
 
@@ -88,6 +83,5 @@ func (n *Node) SSHClientWithTimeout(duration time.Duration) *sshclient.SSHConnec
 		KeyLocation: n.privateKeyLocation,
 		VerboseMode: n.verboseMode,
 		Timeout:     duration,
-		ClientID:    n.clientID,
 	}
 }
